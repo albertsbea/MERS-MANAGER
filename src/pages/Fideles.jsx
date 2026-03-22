@@ -113,7 +113,7 @@ export default function Fideles() {
       </div>
 
       {loading ? <Spinner /> : filtered.length === 0 ? (
-        <EmptyState icon="👥" title="Aucun fidèle trouvé" description="Ajoutez votre premier fidèle ou ajustez les filtres." />
+        <EmptyState icon={<IconUsers size={22} color="#9AA5B4"/>} title="Aucun fidèle trouvé" description="Ajoutez votre premier fidèle ou ajustez les filtres." />
       ) : (
         <Card>
           <div className="overflow-x-auto">

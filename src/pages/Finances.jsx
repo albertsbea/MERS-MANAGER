@@ -1,4 +1,4 @@
-import { IconPlus, IconTrash, IconTrendUp, IconWallet } from './../components/icons'
+import { IconPlus, IconTrash, IconTrendUp, IconWallet, IconBarChart, IconArrowUp } from './../components/icons'
 import { useEffect, useState } from 'react'
 import { collectesApi, depensesApi, branchesApi, cultesApi } from '../lib/api'
 import { formatGNF, formatDateShort, CATEGORIES_DEPENSE } from '../lib/utils'
@@ -107,20 +107,20 @@ export default function Finances() {
         subtitle="Collectes, dépenses et solde général"
         action={
           <div className="flex gap-2">
-            <Button variant="secondary" onClick={openDep}>+ Dépense</Button>
-            <Button variant="gold"      onClick={openCol}>+ Collecte</Button>
+            <Button variant="secondary" onClick={openDep}><IconBarChart size={14}/> Dépense</Button>
+            <Button variant="gold"      onClick={openCol}><IconPlus size={14} color="white"/> Collecte</Button>
           </div>
         }
       />
 
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <StatCard label="Total collectes"  value={formatGNF(totalCollectes)} icon="📥" accent="gold" />
-        <StatCard label="Total dépenses"   value={formatGNF(totalDepenses)}  icon="📤" accent="red" />
+        <StatCard label="Total collectes" value={formatGNF(totalCollectes)} icon={(c) => <IconTrendUp size={20} color={c}/>} accent="gold" />
+        <StatCard label="Total dépenses"  value={formatGNF(totalDepenses)}  icon={(c) => <IconBarChart size={20} color={c}/>} accent="red" />
         <StatCard
           label="Solde net"
           value={formatGNF(solde)}
-          icon="💰"
+          icon={(c) => <IconWallet size={20} color={c}/>}
           accent={solde >= 0 ? 'green' : 'red'}
           sub={solde >= 0 ? 'Excédent' : 'Déficit'}
         />
@@ -166,7 +166,7 @@ export default function Finances() {
           {/* ── COLLECTES ── */}
           {tab === 'collectes' && (
             filteredCol.length === 0 ? (
-              <EmptyState icon="📥" title="Aucune collecte" description="Enregistrez votre première collecte." />
+              <EmptyState icon={<IconTrendUp size={22} color="#9AA5B4"/>} title="Aucune collecte" description="Enregistrez votre première collecte." />
             ) : (
               <Card>
                 <div className="overflow-x-auto">
@@ -213,7 +213,7 @@ export default function Finances() {
           {/* ── DÉPENSES ── */}
           {tab === 'depenses' && (
             filteredDep.length === 0 ? (
-              <EmptyState icon="📤" title="Aucune dépense" description="Aucune dépense enregistrée." />
+              <EmptyState icon={<IconBarChart size={22} color="#9AA5B4"/>} title="Aucune dépense" description="Aucune dépense enregistrée." />
             ) : (
               <Card>
                 <div className="overflow-x-auto">

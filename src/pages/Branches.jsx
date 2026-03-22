@@ -65,7 +65,7 @@ export default function Branches() {
       />
 
       {loading ? <Spinner /> : branches.length === 0 ? (
-        <EmptyState icon="🏛️" title="Aucune branche" description="Créez votre première branche pour commencer." />
+        <EmptyState icon={<IconBuilding size={22} color="#9AA5B4"/>} title="Aucune branche" description="Créez votre première branche pour commencer." />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {branches.map(b => (

@@ -106,7 +106,7 @@ export default function Cultes() {
       </div>
 
       {loading ? <Spinner /> : filtered.length === 0 ? (
-        <EmptyState icon="📖" title="Aucun culte" description="Enregistrez votre premier culte." />
+        <EmptyState icon={<IconBook size={22} color="#9AA5B4"/>} title="Aucun culte" description="Enregistrez votre premier culte." />
       ) : (
         <Card>
           <div className="overflow-x-auto">
