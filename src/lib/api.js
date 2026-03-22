@@ -214,3 +214,35 @@ export const analyticsApi = {
     return { fideles: fideles||[], branches: branches||[], collectes: collectes||[], depenses: depenses||[], cultes: cultes||[], presences: presences||[] }
   }
 }
+
+// ── PASTEURS ─────────────────────────────────────────────────
+export const pasteursApi = {
+  getAll: (branchId = null) => {
+    let q = supabase.from('pasteurs').select('*, branches(nom, region)').order('nom')
+    if (branchId) q = q.eq('branch_id', branchId)
+    return q
+  },
+  getById: (id) =>
+    supabase.from('pasteurs').select('*, branches(nom, region)').eq('id', id).single(),
+  create: (data) =>
+    supabase.from('pasteurs').insert(data).select().single(),
+  update: (id, data) =>
+    supabase.from('pasteurs').update(data).eq('id', id).select().single(),
+  delete: (id) =>
+    supabase.from('pasteurs').delete().eq('id', id),
+}
+
+// ── UPLOAD FICHIER SUPABASE STORAGE ──────────────────────────
+export const storageApi = {
+  upload: async (file, folder = 'ressources') => {
+    const ext  = file.name.split('.').pop()
+    const name = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+    const { data, error } = await supabase.storage.from('mers-files').upload(name, file, { cacheControl: '3600', upsert: false })
+    if (error) throw error
+    const { data: { publicUrl } } = supabase.storage.from('mers-files').getPublicUrl(name)
+    return { path: name, url: publicUrl, size: `${(file.size / 1024).toFixed(0)} Ko` }
+  },
+  delete: async (path) => {
+    return supabase.storage.from('mers-files').remove([path])
+  }
+}
