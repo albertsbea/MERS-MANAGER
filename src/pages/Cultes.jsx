@@ -1,3 +1,5 @@
+import ConfirmModal from '../components/ConfirmModal'
+import Pagination from '../components/Pagination'
 import { useEffect, useState } from 'react'
 import { cultesApi, branchesApi, presencesApi } from '../lib/api'
 import { formatDate, formatGNF } from '../lib/utils'
@@ -31,6 +33,10 @@ export default function Cultes() {
   const [culteForm, setCulteForm] = useState(EMPTY_C)
   const [presForm,  setPresForm]  = useState(EMPTY_P)
   const [saving,    setSaving]    = useState(false)
+  const [delId,    setDelId]    = useState(null)
+  const [deleting, setDeleting] = useState(false)
+  const [page,    setPage]    = useState(1)
+  const [perPage, setPerPage] = useState(10)
 
   const load = async () => {
     setLoading(true)
@@ -40,6 +46,7 @@ export default function Cultes() {
     setLoading(false)
   }
   useEffect(() => { load() }, [])
+  useEffect(() => { setPage(1) }, [search, filterB, filterT])
 
   const filtered = cultes.filter(c => {
     const q = search.toLowerCase()
@@ -47,6 +54,10 @@ export default function Cultes() {
       && (!filterB || c.branch_id === filterB)
       && (!filterT || c.type_culte === filterT)
   })
+
+  const paginated = filtered.slice((page-1)*perPage, page*perPage)
+  const handlePage = (p) => setPage(p)
+  handlePage._setPerPage = (n) => { setPerPage(n); setPage(1) }
 
   const totalPresents  = cultes.reduce((s,c) => s + (c.presences?.[0]?.total||0), 0)
   const avgPresents    = cultes.filter(c=>c.presences?.[0]).length > 0
@@ -63,9 +74,11 @@ export default function Cultes() {
     editingC ? await cultesApi.update(editingC.id, culteForm) : await cultesApi.create(culteForm)
     setSaving(false); closeC(); load()
   }
-  const delC = async (id) => {
-    if (!confirm('Supprimer ce culte ?')) return
-    await cultesApi.delete(id); load()
+  const delC = (id) => setDelId(id)
+  const confirmDel = async () => {
+    setDeleting(true)
+    await cultesApi.delete(delId)
+    setDeleting(false); setDelId(null); load()
   }
 
   const openPres = async (c) => {
@@ -139,68 +152,73 @@ export default function Cultes() {
         <EmptyState icon={<IconBook size={22} color="#9AA5B4"/>} title="Aucun culte" description="Enregistrez votre premier culte."
           action={<Button variant="gold" onClick={openNewC}><IconPlus size={13} color="white"/> Créer un culte</Button>}/>
       ) : (
-        <div className="space-y-3">
-          {filtered.map(c => {
-            const pres = c.presences?.[0]
-            const col  = c.collectes?.[0]
-            const tm   = typeMeta[c.type_culte] || typeMeta.dimanche
-            return (
-              <Card key={c.id} className="hover:shadow-md transition-all">
-                <CardBody className="py-4">
-                  <div className="flex items-start gap-3 flex-wrap">
-                    <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{background:tm.bg}}>
-                      <IconBook size={18} color={tm.ic}/>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start flex-wrap gap-2 mb-0.5">
-                        <span className="font-bold text-[#0D2B5E] text-sm">{formatDate(c.date_culte)}</span>
-                        <Badge color={tm.color} size="xs">{tm.label}</Badge>
-                        {!pres && <span className="inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-50 text-orange-600 border border-orange-200">Présences manquantes</span>}
+        <>
+          <div className="space-y-3 mb-3">
+            {paginated.map(c => {
+              const pres = c.presences?.[0]
+              const col  = c.collectes?.[0]
+              const tm   = typeMeta[c.type_culte] || typeMeta.dimanche
+              return (
+                <Card key={c.id} className="hover:shadow-md transition-all">
+                  <CardBody className="py-4">
+                    <div className="flex items-start gap-3 flex-wrap">
+                      <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{background:tm.bg}}>
+                        <IconBook size={18} color={tm.ic}/>
                       </div>
-                      <p className="text-sm text-slate-500 mb-1">{c.branches?.nom||'—'}</p>
-                      <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-400">
-                        {c.predicateur    && <span><span className="text-slate-300">Par </span>{c.predicateur}</span>}
-                        {c.theme          && <span className="truncate max-w-[200px]">«{c.theme}»</span>}
-                        {c.texte_biblique && <span>{c.texte_biblique}</span>}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start flex-wrap gap-2 mb-0.5">
+                          <span className="font-bold text-[#0D2B5E] text-sm">{formatDate(c.date_culte)}</span>
+                          <Badge color={tm.color} size="xs">{tm.label}</Badge>
+                          {!pres && <span className="inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-50 text-orange-600 border border-orange-200">Présences manquantes</span>}
+                        </div>
+                        <p className="text-sm text-slate-500 mb-1">{c.branches?.nom||'—'}</p>
+                        <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-400">
+                          {c.predicateur    && <span><span className="text-slate-300">Par </span>{c.predicateur}</span>}
+                          {c.theme          && <span className="truncate max-w-[200px]">«{c.theme}»</span>}
+                          {c.texte_biblique && <span>{c.texte_biblique}</span>}
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                      {pres ? (
-                        <div className="text-center bg-[#EBF3FC] rounded-xl px-3 py-2">
-                          <p className="text-2xl font-bold text-[#0D2B5E]">{pres.total}</p>
-                          <p className="text-[10px] text-[#7AABDC] font-semibold uppercase">présents</p>
-                          <p className="text-[9px] text-slate-400 mt-0.5">{pres.papas}P · {pres.mamans}M · {pres.jeunes}J · {pres.enfants}E{pres.visiteurs>0?` · ${pres.visiteurs}V`:''}</p>
-                        </div>
-                      ) : (
-                        <div className="text-center border-2 border-dashed border-slate-200 rounded-xl px-3 py-2">
-                          <p className="text-xs text-slate-300">Aucune</p><p className="text-[10px] text-slate-300">présence</p>
-                        </div>
-                      )}
-                      {col && (
-                        <div className="text-center bg-[#FEF6E7] rounded-xl px-3 py-2">
-                          <p className="text-sm font-bold text-[#C8880A]">{formatGNF(col.total)}</p>
-                          <p className="text-[10px] text-[#C8880A] font-semibold uppercase">collecte</p>
-                        </div>
-                      )}
-                    </div>
+                      <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                        {pres ? (
+                          <div className="text-center bg-[#EBF3FC] rounded-xl px-3 py-2">
+                            <p className="text-2xl font-bold text-[#0D2B5E]">{pres.total}</p>
+                            <p className="text-[10px] text-[#7AABDC] font-semibold uppercase">présents</p>
+                            <p className="text-[9px] text-slate-400 mt-0.5">{pres.papas}P · {pres.mamans}M · {pres.jeunes}J · {pres.enfants}E{pres.visiteurs>0?` · ${pres.visiteurs}V`:''}</p>
+                          </div>
+                        ) : (
+                          <div className="text-center border-2 border-dashed border-slate-200 rounded-xl px-3 py-2">
+                            <p className="text-xs text-slate-300">Aucune</p><p className="text-[10px] text-slate-300">présence</p>
+                          </div>
+                        )}
+                        {col && (
+                          <div className="text-center bg-[#FEF6E7] rounded-xl px-3 py-2">
+                            <p className="text-sm font-bold text-[#C8880A]">{formatGNF(col.total)}</p>
+                            <p className="text-[10px] text-[#C8880A] font-semibold uppercase">collecte</p>
+                          </div>
+                        )}
+                      </div>
 
-                    <div className="flex flex-col gap-1.5 shrink-0 min-w-[130px]">
-                      <Button size="sm" variant={pres?'secondary':'primary'} onClick={()=>openPres(c)}>
-                        <IconPeople size={12}/>{pres?'Modifier présences':'Saisir présences'}
-                      </Button>
-                      <div className="flex gap-1">
-                        <button onClick={()=>{setActiveC(c);setDetailModal(true)}} className="flex-1 px-2 py-1.5 text-xs text-[#1A5EA8] bg-[#E6F1FB] rounded-lg hover:bg-[#B5D4F4] font-medium text-center">Détails</button>
-                        <Button size="sm" variant="ghost" onClick={()=>openEditC(c)}><IconEdit size={12}/></Button>
-                        <Button size="sm" variant="ghost" onClick={()=>delC(c.id)} className="text-red-400 hover:bg-red-50"><IconTrash size={12}/></Button>
+                      <div className="flex flex-col gap-1.5 shrink-0 min-w-[130px]">
+                        <Button size="sm" variant={pres?'secondary':'primary'} onClick={()=>openPres(c)}>
+                          <IconPeople size={12}/>{pres?'Modifier présences':'Saisir présences'}
+                        </Button>
+                        <div className="flex gap-1">
+                          <button onClick={()=>{setActiveC(c);setDetailModal(true)}} className="flex-1 px-2 py-1.5 text-xs text-[#1A5EA8] bg-[#E6F1FB] rounded-lg hover:bg-[#B5D4F4] font-medium text-center">Détails</button>
+                          <Button size="sm" variant="ghost" onClick={()=>openEditC(c)}><IconEdit size={12}/></Button>
+                          <Button size="sm" variant="ghost" onClick={()=>delC(c.id)} className="text-red-400 hover:bg-red-50"><IconTrash size={12}/></Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardBody>
-              </Card>
-            )
-          })}
-        </div>
+                  </CardBody>
+                </Card>
+              )
+            })}
+          </div>
+          <div className="bg-white rounded-xl border border-slate-100">
+            <Pagination total={filtered.length} perPage={perPage} page={page} onPage={handlePage}/>
+          </div>
+        </>
       )}
 
       {/* Modal culte */}
@@ -291,6 +309,16 @@ export default function Cultes() {
           </div>
         </Modal>
       )}
+
+      <ConfirmModal
+        isOpen={!!delId}
+        onClose={()=>setDelId(null)}
+        onConfirm={confirmDel}
+        loading={deleting}
+        title="Supprimer ce culte"
+        message="Ce culte et ses présences associées seront définitivement supprimés."
+        type="danger"
+      />
     </div>
   )
 }

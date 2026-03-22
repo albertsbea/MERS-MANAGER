@@ -1,3 +1,4 @@
+import ConfirmModal from '../components/ConfirmModal'
 import { IconPlus, IconEdit, IconTrash, IconBuilding, IconMapPin } from './../components/icons'
 import { useEffect, useState } from 'react'
 import { branchesApi } from '../lib/api'
@@ -20,7 +21,9 @@ export default function Branches() {
   const [modal, setModal]       = useState(false)
   const [editing, setEditing]   = useState(null)
   const [form, setForm]         = useState(EMPTY)
-  const [saving, setSaving]     = useState(false)
+  const [saving,   setSaving]   = useState(false)
+  const [delId,    setDelId]    = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -48,10 +51,11 @@ export default function Branches() {
     load()
   }
 
-  const del = async (id) => {
-    if (!confirm('Supprimer cette branche ?')) return
-    await branchesApi.delete(id)
-    load()
+  const del        = (id) => setDelId(id)
+  const confirmDel = async () => {
+    setDeleting(true)
+    await branchesApi.delete(delId)
+    setDeleting(false); setDelId(null); load()
   }
 
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }))
@@ -130,6 +134,16 @@ export default function Branches() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        isOpen={!!delId}
+        onClose={() => setDelId(null)}
+        onConfirm={confirmDel}
+        loading={deleting}
+        title="Supprimer la branche"
+        message="Cette branche sera définitivement supprimée. Tous les fidèles et cultes associés seront également affectés."
+        type="danger"
+      />
     </div>
   )
 }

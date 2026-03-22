@@ -1,3 +1,4 @@
+import ConfirmModal from '../components/ConfirmModal'
 import { useEffect, useState } from 'react'
 import { annoncesApi, branchesApi } from '../lib/api'
 import { formatDate, TYPE_ANNONCE } from '../lib/utils'
@@ -40,6 +41,8 @@ export default function Communication() {
   const [editing,   setEditing]   = useState(null)
   const [form,      setForm]      = useState(EMPTY)
   const [saving,    setSaving]    = useState(false)
+  const [delId,    setDelId]    = useState(null)
+  const [deleting, setDeleting] = useState(false)
   const [filterType, setFilterType] = useState('')
 
   const load = async () => {
@@ -70,8 +73,12 @@ export default function Communication() {
     setSaving(false); close(); load()
   }
   const del = async (id) => {
-    if (!confirm('Supprimer cette annonce ?')) return
-    await annoncesApi.delete(id); load()
+    setDelId(id)
+  }
+  const confirmDel = async () => {
+    setDeleting(true)
+    await annoncesApi.delete(delId)
+    setDeleting(false); setDelId(null); load()
   }
   const f = k => e => setForm(p => ({ ...p, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
 
@@ -211,6 +218,16 @@ export default function Communication() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        isOpen={!!delId}
+        onClose={()=>setDelId(null)}
+        onConfirm={confirmDel}
+        loading={deleting}
+        title="Supprimer ce annonce"
+        message="Cette annonce sera définitivement supprimée."
+        type="danger"
+      />
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import ConfirmModal from '../components/ConfirmModal'
 import { useEffect, useState } from 'react'
 import { pasteursApi, branchesApi } from '../lib/api'
 import { formatDate } from '../lib/utils'
@@ -32,6 +33,8 @@ export default function Pasteurs() {
   const [editing,   setEditing]   = useState(null)
   const [form,      setForm]      = useState(EMPTY)
   const [saving,    setSaving]    = useState(false)
+  const [delId,    setDelId]    = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -91,8 +94,12 @@ export default function Pasteurs() {
     setSaving(false); close(); load()
   }
   const del = async (id) => {
-    if (!confirm('Supprimer ce pasteur ?')) return
-    await pasteursApi.delete(id); load()
+    setDelId(id)
+  }
+  const confirmDel = async () => {
+    setDeleting(true)
+    await pasteurssApi.delete(delId)
+    setDeleting(false); setDelId(null); load()
   }
   const f = k => e => setForm(p => ({ ...p, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
 
@@ -286,6 +293,16 @@ export default function Pasteurs() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        isOpen={!!delId}
+        onClose={()=>setDelId(null)}
+        onConfirm={confirmDel}
+        loading={deleting}
+        title="Supprimer ce pasteur"
+        message="Ce pasteur sera définitivement supprimé."
+        type="danger"
+      />
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import ConfirmModal from '../components/ConfirmModal'
 import { useEffect, useState } from 'react'
 import { utilisateursApi, branchesApi } from '../lib/api'
 import { ROLES } from '../lib/utils'
@@ -32,6 +33,8 @@ export default function Administration() {
   const [editing,  setEditing]  = useState(null)
   const [form,     setForm]     = useState(EMPTY)
   const [saving,   setSaving]   = useState(false)
+  const [delId,    setDelId]    = useState(null)
+  const [deleting, setDeleting] = useState(false)
   const [tab,      setTab]      = useState('utilisateurs')
 
   const load = async () => {
@@ -61,8 +64,12 @@ export default function Administration() {
     setSaving(false); close(); load()
   }
   const del = async (id) => {
-    if (!confirm('Supprimer cet utilisateur ?')) return
-    await utilisateursApi.delete(id); load()
+    setDelId(id)
+  }
+  const confirmDel = async () => {
+    setDeleting(true)
+    await administrationsApi.delete(delId)
+    setDeleting(false); setDelId(null); load()
   }
   const toggleActif = async (u) => {
     await utilisateursApi.update(u.id, { actif: !u.actif }); load()
@@ -264,6 +271,16 @@ export default function Administration() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        isOpen={!!delId}
+        onClose={()=>setDelId(null)}
+        onConfirm={confirmDel}
+        loading={deleting}
+        title="Supprimer ce utilisateur"
+        message="Cet utilisateur perdra son accès à la plateforme."
+        type="danger"
+      />
     </div>
   )
 }

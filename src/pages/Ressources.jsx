@@ -1,3 +1,4 @@
+import ConfirmModal from '../components/ConfirmModal'
 import { useEffect, useState, useRef } from 'react'
 import { ressourcesApi, branchesApi, storageApi } from '../lib/api'
 import { formatDate, TYPE_RESSOURCE } from '../lib/utils'
@@ -62,6 +63,8 @@ export default function Ressources() {
   const [form,      setForm]      = useState(EMPTY)
   const [extraMeta, setExtraMeta] = useState({})
   const [saving,    setSaving]    = useState(false)
+  const [delId,    setDelId]    = useState(null)
+  const [deleting, setDeleting] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [urlMode,   setUrlMode]   = useState(false)
   const fileRef = useRef()
@@ -189,9 +192,13 @@ export default function Ressources() {
   }
 
   const del = async r => {
-    if (!confirm('Supprimer cette ressource ?')) return
-    await ressourcesApi.delete(r.id)
+    setDelId(r.id)
     load()
+  }
+  const confirmDel = async () => {
+    setDeleting(true)
+    await ressourcesApi.delete(delId)
+    setDeleting(false); setDelId(null); load()
   }
 
   const f  = k => e => setForm(p=>({...p,[k]:e.target.value}))
@@ -468,6 +475,16 @@ export default function Ressources() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        isOpen={!!delId}
+        onClose={()=>setDelId(null)}
+        onConfirm={confirmDel}
+        loading={deleting}
+        title="Supprimer ce ressource"
+        message="Cette ressource et son fichier associé seront supprimés."
+        type="danger"
+      />
     </div>
   )
 }

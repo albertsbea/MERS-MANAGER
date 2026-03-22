@@ -1,3 +1,4 @@
+import ConfirmModal from '../components/ConfirmModal'
 import { IconPlus, IconTrash, IconTrendUp, IconWallet, IconBarChart, IconArrowUp } from './../components/icons'
 import { useEffect, useState } from 'react'
 import { collectesApi, depensesApi, branchesApi, cultesApi } from '../lib/api'
@@ -31,6 +32,8 @@ export default function Finances() {
   const [colForm,  setColForm]  = useState(EMPTY_COLLECTE)
   const [depForm,  setDepForm]  = useState(EMPTY_DEPENSE)
   const [saving,   setSaving]   = useState(false)
+  const [delId,    setDelId]    = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -87,10 +90,11 @@ export default function Finances() {
     load()
   }
 
-  const delDep = async (id) => {
-    if (!confirm('Supprimer cette dépense ?')) return
-    await depensesApi.delete(id)
-    load()
+  const delDep = (id) => setDelId(id)
+  const confirmDel = async () => {
+    setDeleting(true)
+    await depensesApi.delete(delId)
+    setDeleting(false); setDelId(null); load()
   }
 
   const cf = (k) => (e) => setColForm(p => ({ ...p, [k]: e.target.type === 'number' ? parseInt(e.target.value) || 0 : e.target.value }))
@@ -387,6 +391,17 @@ export default function Finances() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        isOpen={!!delId}
+        onClose={()=>setDelId(null)}
+        onConfirm={confirmDel}
+        loading={deleting}
+        title="Supprimer ce dépense"
+        message="Cette dépense sera définitivement supprimée."
+        type="danger"
+      />
     </div>
   )
 }
+

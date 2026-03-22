@@ -37,7 +37,7 @@ const SECTIONS = [
     { to: '/ressources',    icon: 'file',   label: 'Ressources' },
     { to: '/rapports',      icon: 'chart',  label: 'Rapports' },
     { to: '/administration',icon: 'shield', label: 'Administration' },
-    { to: '/guide',         icon: 'help',   label: 'FAQ' },
+    { to: '/guide',         icon: 'help',   label: 'Guide' },
   ]},
 ]
 
@@ -99,4 +99,3 @@ export default function Sidebar({ onClose }) {
     </aside>
   )
 }
-
