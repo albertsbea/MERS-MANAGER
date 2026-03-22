@@ -66,12 +66,12 @@ INSERT INTO pasteurs (branch_id, nom, prenom, telephone, email, ministere, role_
 -- ── FIDÈLES (80 membres répartis) ────────────────────────────
 DO $$
 DECLARE
-  noms TEXT[] := ARRAY['Soumah','Camara','Diallo','Bah','Kouyaté','Condé','Barry','Keïta','Touré','Sylla','Guilavogui','Loua','Kourouma','Traoré','Cissé','Bangoura','Sacko','Doumbouya','Fofana','Konaté'];
+  noms      TEXT[] := ARRAY['Soumah','Camara','Diallo','Bah','Kouyaté','Condé','Barry','Keïta','Touré','Sylla','Guilavogui','Loua','Kourouma','Traoré','Cissé','Bangoura','Sacko','Doumbouya','Fofana','Konaté'];
   prenoms_h TEXT[] := ARRAY['Ibrahim','Mamadou','Oumar','Alpha','Mohamed','Ibrahima','Sekou','Aboubacar','Boubacar','Lansana','Thierno','Fodé','Elhadj','Mamadi','Amadou'];
   prenoms_f TEXT[] := ARRAY['Fatoumata','Aissatou','Mariama','Kadiatou','Hawa','Aminata','Binta','Djenab','Mariam','Rougui','Fanta','Safiatou','Oumou','Adama','Ramatoulaye'];
-  depts TEXT[] := ARRAY['papas','mamans','jeunes','enfants'];
-  discs TEXT[] := ARRAY['non_commence','en_cours','complete'];
-  branches UUID[] := ARRAY[
+  depts     TEXT[] := ARRAY['papas','mamans','jeunes','enfants'];
+  discs     TEXT[] := ARRAY['non_commence','en_cours','complete'];
+  branches  UUID[] := ARRAY[
     'b1000000-0000-0000-0000-000000000001'::UUID,
     'b1000000-0000-0000-0000-000000000002'::UUID,
     'b1000000-0000-0000-0000-000000000003'::UUID,
@@ -81,19 +81,25 @@ DECLARE
     'b1000000-0000-0000-0000-000000000009'::UUID,
     'b1000000-0000-0000-0000-000000000010'::UUID
   ];
-  i INT;
+  i         INT;
+  idx_nom   INT;
+  idx_pre   INT;
 BEGIN
   FOR i IN 1..80 LOOP
+    -- Calcul sécurisé des index (toujours entre 1 et longueur du tableau)
+    idx_nom := 1 + (floor(random() * 20))::INT % 20;
+    idx_pre := 1 + (floor(random() * 15))::INT % 15;
+
     INSERT INTO fideles (branch_id, nom, prenom, genre, departement, baptise, discipolat, telephone, statut)
     VALUES (
-      branches[1 + (i % array_length(branches,1))],
-      noms[1 + (random()*array_length(noms,1)-1)::INT % array_length(noms,1)],
-      CASE WHEN i % 2 = 0 THEN prenoms_f[1 + (random()*14)::INT % 15] ELSE prenoms_h[1 + (random()*14)::INT % 15] END,
+      branches[1 + (i % array_length(branches, 1))],
+      noms[idx_nom],
+      CASE WHEN i % 2 = 0 THEN prenoms_f[idx_pre] ELSE prenoms_h[idx_pre] END,
       CASE WHEN i % 2 = 0 THEN 'F' ELSE 'M' END,
-      depts[1 + (i % array_length(depts,1))],
+      depts[1 + (i % 4)],
       (random() > 0.35),
-      discs[1 + (random()*2.99)::INT % 3],
-      '+224 6' || (20 + (random()*9)::INT)::TEXT || ' ' || (100 + (random()*899)::INT)::TEXT || ' ' || (100 + (random()*899)::INT)::TEXT,
+      discs[1 + (i % 3)],
+      '+224 6' || (20 + (floor(random()*9))::INT)::TEXT || ' ' || (100 + (floor(random()*899))::INT)::TEXT || ' ' || (100 + (floor(random()*899))::INT)::TEXT,
       'actif'
     );
   END LOOP;
