@@ -1,3 +1,4 @@
+import { IconPlus, IconEdit, IconTrash, IconSearch, IconFilter, IconUsers } from './../components/icons'
 import { useEffect, useState } from 'react'
 import { fidelesApi, branchesApi } from '../lib/api'
 import { DEPARTEMENTS, DISCIPOLAT, formatDate } from '../lib/utils'
@@ -82,7 +83,7 @@ export default function Fideles() {
       <PageHeader
         title="Fidèles"
         subtitle={`${fideles.filter(f => f.statut === 'actif').length} membres actifs`}
-        action={<Button onClick={openNew} variant="gold">+ Nouveau fidèle</Button>}
+        action={<Button onClick={openNew} variant="gold"><IconPlus size={14} color="white"/> Nouveau fidèle</Button>}
       />
 
       {/* Filtres */}
@@ -154,8 +155,8 @@ export default function Fideles() {
                     <td className="px-4 py-3 text-slate-500 text-xs">{f.telephone || '—'}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => openEdit(f)}>✏️</Button>
-                        <Button size="sm" variant="ghost" onClick={() => del(f.id)} className="text-red-400 hover:bg-red-50">🗑️</Button>
+                        <Button size="sm" variant="ghost" onClick={() => openEdit(f)}><IconEdit size={13}/></Button>
+                        <Button size="sm" variant="ghost" onClick={() => del(f.id)} className="text-red-400 hover:bg-red-50"><IconTrash size={13}/></Button>
                       </div>
                     </td>
                   </tr>

@@ -1,3 +1,4 @@
+import { IconPlus, IconEdit, IconBook, IconCalendar } from './../components/icons'
 import { useEffect, useState } from 'react'
 import { cultesApi, branchesApi, presencesApi } from '../lib/api'
 import { TYPE_CULTE, formatDate } from '../lib/utils'
@@ -90,7 +91,7 @@ export default function Cultes() {
       <PageHeader
         title="Cultes & Présences"
         subtitle={`${cultes.length} culte(s) enregistré(s)`}
-        action={<Button onClick={openNewCulte} variant="gold">+ Nouveau culte</Button>}
+        action={<Button onClick={openNewCulte} variant="gold"><IconPlus size={14} color="white"/> Nouveau culte</Button>}
       />
 
       <div className="flex gap-3 mb-5">
@@ -147,9 +148,9 @@ export default function Cultes() {
                       <td className="px-4 py-3">
                         <div className="flex gap-1">
                           {pres && (
-                            <Button size="sm" variant="ghost" onClick={() => openPres(c)}>👁️</Button>
+                            <Button size="sm" variant="ghost" onClick={() => openPres(c)}><IconCalendar size={13}/></Button>
                           )}
-                          <Button size="sm" variant="ghost" onClick={() => openEditCulte(c)}>✏️</Button>
+                          <Button size="sm" variant="ghost" onClick={() => openEditCulte(c)}><IconEdit size={13}/></Button>
                         </div>
                       </td>
                     </tr>

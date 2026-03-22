@@ -1,3 +1,4 @@
+import { IconPlus, IconTrash, IconTrendUp, IconWallet } from './../components/icons'
 import { useEffect, useState } from 'react'
 import { collectesApi, depensesApi, branchesApi, cultesApi } from '../lib/api'
 import { formatGNF, formatDateShort, CATEGORIES_DEPENSE } from '../lib/utils'
@@ -240,7 +241,7 @@ export default function Finances() {
                           </td>
                           <td className="px-4 py-3 text-right font-bold text-red-600">{formatGNF(d.montant)}</td>
                           <td className="px-4 py-3">
-                            <Button size="sm" variant="ghost" onClick={() => delDep(d.id)} className="text-red-400 hover:bg-red-50">🗑️</Button>
+                            <Button size="sm" variant="ghost" onClick={() => delDep(d.id)} className="text-red-400 hover:bg-red-50"><IconTrash size={13}/></Button>
                           </td>
                         </tr>
                       ))}

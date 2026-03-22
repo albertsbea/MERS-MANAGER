@@ -1,3 +1,4 @@
+import { IconPlus, IconEdit, IconTrash, IconBuilding, IconMapPin } from './../components/icons'
 import { useEffect, useState } from 'react'
 import { branchesApi } from '../lib/api'
 import { STATUT_BRANCHE } from '../lib/utils'
@@ -60,7 +61,7 @@ export default function Branches() {
       <PageHeader
         title="Branches"
         subtitle={`${branches.length} branche(s) enregistrée(s)`}
-        action={<Button onClick={openNew} variant="gold">+ Nouvelle branche</Button>}
+        action={<Button onClick={openNew} variant="gold"><IconPlus size={14} color="white"/> Nouvelle branche</Button>}
       />
 
       {loading ? <Spinner /> : branches.length === 0 ? (
@@ -95,8 +96,8 @@ export default function Branches() {
                 )}
 
                 <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100">
-                  <Button size="sm" variant="secondary" onClick={() => openEdit(b)}>✏️ Modifier</Button>
-                  <Button size="sm" variant="ghost" onClick={() => del(b.id)} className="text-red-500 hover:bg-red-50">🗑️</Button>
+                  <Button size="sm" variant="secondary" onClick={() => openEdit(b)}><IconEdit size={13}/>Modifier</Button>
+                  <Button size="sm" variant="ghost" onClick={() => del(b.id)} className="text-red-500 hover:bg-red-50"><IconTrash size={13}/></Button>
                 </div>
               </CardBody>
             </Card>
