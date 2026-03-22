@@ -156,3 +156,61 @@ export const statsApi = {
     }
   }
 }
+
+// ── ANNONCES ─────────────────────────────────────────────────
+export const annoncesApi = {
+  getAll: () =>
+    supabase.from('annonces').select('*, branches(nom)').order('created_at', { ascending: false }),
+  create: (data) =>
+    supabase.from('annonces').insert(data).select().single(),
+  update: (id, data) =>
+    supabase.from('annonces').update(data).eq('id', id).select().single(),
+  delete: (id) =>
+    supabase.from('annonces').delete().eq('id', id),
+}
+
+// ── RESSOURCES ───────────────────────────────────────────────
+export const ressourcesApi = {
+  getAll: () =>
+    supabase.from('ressources').select('*, branches(nom)').order('created_at', { ascending: false }),
+  create: (data) =>
+    supabase.from('ressources').insert(data).select().single(),
+  update: (id, data) =>
+    supabase.from('ressources').update(data).eq('id', id).select().single(),
+  delete: (id) =>
+    supabase.from('ressources').delete().eq('id', id),
+}
+
+// ── UTILISATEURS ─────────────────────────────────────────────
+export const utilisateursApi = {
+  getAll: () =>
+    supabase.from('utilisateurs').select('*, branches(nom)').order('nom'),
+  create: (data) =>
+    supabase.from('utilisateurs').insert(data).select().single(),
+  update: (id, data) =>
+    supabase.from('utilisateurs').update(data).eq('id', id).select().single(),
+  delete: (id) =>
+    supabase.from('utilisateurs').delete().eq('id', id),
+}
+
+// ── STATS ANALYTICS ──────────────────────────────────────────
+export const analyticsApi = {
+  getFullStats: async () => {
+    const [
+      { data: fideles },
+      { data: branches },
+      { data: collectes },
+      { data: depenses },
+      { data: cultes },
+      { data: presences },
+    ] = await Promise.all([
+      supabase.from('fideles').select('departement, statut, baptise, discipolat, branch_id, created_at'),
+      supabase.from('branches').select('id, nom, region, statut'),
+      supabase.from('collectes').select('total, dimes, offrandes_ordinaires, offrande_speciale, created_at, branch_id'),
+      supabase.from('depenses').select('montant, categorie, created_at, branch_id'),
+      supabase.from('cultes').select('type_culte, date_culte, branch_id'),
+      supabase.from('presences').select('total, culte_id'),
+    ])
+    return { fideles: fideles||[], branches: branches||[], collectes: collectes||[], depenses: depenses||[], cultes: cultes||[], presences: presences||[] }
+  }
+}

@@ -50,3 +50,26 @@ export const CATEGORIES_DEPENSE = {
   prime_pasteur:  'Prime pasteur',
   autre:          'Autre',
 }
+
+export const ROLES = {
+  administrateur:    { label: 'Administrateur',    color: 'purple', desc: 'Accès total à la plateforme' },
+  directeur:         { label: 'Directeur National', color: 'navy',   desc: 'Vue nationale en lecture' },
+  pasteur_titulaire: { label: 'Pasteur Titulaire',  color: 'blue',   desc: 'Gestion de sa branche' },
+  pasteur_assistant: { label: 'Pasteur Assistant',  color: 'teal',   desc: 'Sa branche en lecture' },
+  secretaire:        { label: 'Secrétaire',          color: 'slate',  desc: 'Fidèles et cultes' },
+  tresorier:         { label: 'Trésorier',           color: 'gold',   desc: 'Finances uniquement' },
+}
+
+export const TYPE_ANNONCE = {
+  info:      { label: 'Information', color: 'blue' },
+  urgent:    { label: 'Urgent',      color: 'red' },
+  evenement: { label: 'Événement',   color: 'purple' },
+  priere:    { label: 'Prière',      color: 'teal' },
+}
+
+export const TYPE_RESSOURCE = {
+  predication: { label: 'Prédication', color: 'blue' },
+  document:    { label: 'Document',    color: 'slate' },
+  formulaire:  { label: 'Formulaire',  color: 'gold' },
+  media:       { label: 'Média',       color: 'purple' },
+}
