@@ -1,85 +1,54 @@
-// Modal de confirmation réutilisable pour toutes les suppressions
-// Usage: <ConfirmModal isOpen onConfirm={fn} onClose={fn} title="..." message="..." type="danger|warning|info" />
+import { Trash2, AlertTriangle, Info, X } from 'lucide-react'
 
-const ICONS = {
-  danger: (
-    <svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="1.8" strokeLinecap="round">
-      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-      <path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-    </svg>
-  ),
-  warning: (
-    <svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke="#C8880A" strokeWidth="1.8" strokeLinecap="round">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-    </svg>
-  ),
-  info: (
-    <svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke="#1A5EA8" strokeWidth="1.8" strokeLinecap="round">
-      <circle cx="12" cy="12" r="10"/>
-      <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-    </svg>
-  ),
+function cn(...cls) { return cls.filter(Boolean).join(' ') }
+
+const CONFIG = {
+  danger:  { Icon: Trash2,        iconCls: 'text-red-500',    bg: 'bg-red-50',    btnCls: 'bg-red-500 text-white hover:bg-red-600',       label: 'Supprimer' },
+  warning: { Icon: AlertTriangle, iconCls: 'text-amber-600',  bg: 'bg-amber-50',  btnCls: 'bg-[#C8880A] text-white hover:bg-[#a87209]',   label: 'Confirmer' },
+  info:    { Icon: Info,          iconCls: 'text-[#1A5EA8]',  bg: 'bg-[#EBF3FC]', btnCls: 'bg-[#0D2B5E] text-white hover:bg-[#152f6b]',  label: 'Confirmer' },
 }
 
-const STYLES = {
-  danger:  { iconBg:'#FCEBEB', btnClass:'bg-red-500 hover:bg-red-600 text-white', btnLabel:'Supprimer' },
-  warning: { iconBg:'#FEF6E7', btnClass:'bg-[#C8880A] hover:bg-[#a36d07] text-white', btnLabel:'Confirmer' },
-  info:    { iconBg:'#E6F1FB', btnClass:'bg-[#1A5EA8] hover:bg-[#0D2B5E] text-white', btnLabel:'Confirmer' },
-}
-
-export default function ConfirmModal({
-  isOpen, onClose, onConfirm,
-  title       = 'Confirmer la suppression',
-  message     = 'Cette action est irréversible.',
-  detail,
-  type        = 'danger',
-  confirmLabel,
-  loading     = false,
-}) {
+export default function ConfirmModal({ isOpen, onClose, onConfirm, title = 'Confirmer', message = 'Cette action est irréversible.', detail, type = 'danger', confirmLabel, loading = false }) {
   if (!isOpen) return null
-  const s = STYLES[type] || STYLES.danger
+  const { Icon, iconCls, bg, btnCls, label } = CONFIG[type] || CONFIG.danger
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-[#0D2B5E]/25 backdrop-blur-[2px]" onClick={onClose}/>
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-100 overflow-hidden">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="relative z-50 w-full max-w-sm rounded-xl border border-[#e2e8f0] bg-white shadow-2xl overflow-hidden">
+        {/* Barre couleur top */}
+        <div className={cn("h-1 w-full", type === 'danger' ? 'bg-red-500' : type === 'warning' ? 'bg-[#C8880A]' : 'bg-[#1A5EA8]')} />
 
-        {/* Bande couleur top */}
-        <div className={`h-1 w-full ${type === 'danger' ? 'bg-red-500' : type === 'warning' ? 'bg-[#C8880A]' : 'bg-[#1A5EA8]'}`}/>
-
-        <div className="px-6 py-6">
-          {/* Icône */}
+        <div className="px-6 pt-5 pb-4">
           <div className="flex items-start gap-4 mb-5">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style={{background: s.iconBg}}>
-              {ICONS[type]}
+            <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", bg)}>
+              <Icon size={20} className={iconCls} strokeWidth={1.8} />
             </div>
-            <div className="flex-1 min-w-0 pt-1">
-              <h3 className="font-bold text-[#0D2B5E] text-base leading-tight">{title}</h3>
-              <p className="text-sm text-slate-500 mt-1 leading-relaxed">{message}</p>
+            <div className="flex-1 min-w-0 pt-0.5">
+              <h3 className="text-base font-semibold text-[#0f172a] leading-tight">{title}</h3>
+              <p className="mt-1 text-sm text-[#64748b] leading-relaxed">{message}</p>
               {detail && (
-                <div className="mt-2.5 bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-100">
-                  <p className="text-xs text-slate-600 font-medium">{detail}</p>
+                <div className="mt-2.5 rounded-lg bg-[#f8fafc] border border-[#e2e8f0] px-3 py-2">
+                  <p className="text-xs text-[#64748b] font-medium">{detail}</p>
                 </div>
               )}
             </div>
+            <button onClick={onClose} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[#94a3b8] hover:bg-[#f1f5f9] transition-colors">
+              <X size={14} />
+            </button>
           </div>
 
-          {/* Boutons */}
-          <div className="flex gap-2.5">
+          <div className="flex items-center justify-end gap-2">
             <button onClick={onClose} disabled={loading}
-              className="flex-1 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-40">
+              className="h-9 rounded-md border border-[#e2e8f0] bg-white px-4 text-sm font-medium text-[#64748b] shadow-sm hover:bg-[#f8fafc] transition-colors disabled:opacity-40 cursor-pointer">
               Annuler
             </button>
             <button onClick={onConfirm} disabled={loading}
-              className={`flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all active:scale-95 disabled:opacity-40 flex items-center justify-center gap-2 ${s.btnClass}`}>
+              className={cn("h-9 rounded-md px-4 text-sm font-medium shadow-sm transition-colors disabled:opacity-40 cursor-pointer flex items-center gap-2", btnCls)}>
               {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
-                  Suppression...
-                </>
+                <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" /> En cours...</>
               ) : (
-                confirmLabel || s.btnLabel
+                confirmLabel || label
               )}
             </button>
           </div>

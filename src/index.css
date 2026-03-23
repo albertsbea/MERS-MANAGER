@@ -1,35 +1,47 @@
 @import "tailwindcss";
 
-:root {
-  --navy: #0D2B5E;
-  --blue: #1A5EA8;
-  --gold: #C8880A;
+@layer base {
+  :root {
+    --background:         0 0% 98%;
+    --foreground:         222 47% 11%;
+    --card:               0 0% 100%;
+    --card-foreground:    222 47% 11%;
+    --popover:            0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary:            218 83% 21%;      /* #0D2B5E navy */
+    --primary-foreground: 0 0% 100%;
+    --secondary:          214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
+    --muted:              214 32% 95%;
+    --muted-foreground:   215 16% 47%;
+    --accent:             214 32% 94%;
+    --accent-foreground:  222 47% 11%;
+    --destructive:        0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border:             214 32% 91%;
+    --input:              214 32% 91%;
+    --ring:               215 83% 39%;      /* #1A5EA8 blue */
+
+    /* Sidebar tokens */
+    --sidebar:                218 83% 21%;   /* navy */
+    --sidebar-foreground:     210 100% 90%;
+    --sidebar-primary:        38 84% 42%;    /* gold */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent:         218 60% 28%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border:         218 50% 28%;
+    --sidebar-ring:           215 83% 60%;
+
+    --radius: 0.625rem;
+  }
 }
 
-* { box-sizing: border-box; }
-
-body {
-  font-family: Arial, sans-serif;
-  background: #F5F8FC;
-  color: #1a1a1a;
-  margin: 0;
-}
-
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: #f1f1f1; }
-::-webkit-scrollbar-thumb { background: #B5D4F4; border-radius: 3px; }
-
-/* Mobile menu overlay */
-.sidebar-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 39;
-}
-.sidebar-overlay.open { display: block; }
-
-/* Responsive table */
-@media (max-width: 768px) {
-  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@layer base {
+  * { box-sizing: border-box; border-color: hsl(var(--border)); }
+  body {
+    background-color: hsl(214 32% 96%);
+    color: hsl(var(--foreground));
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
 }

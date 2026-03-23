@@ -1,39 +1,78 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { statsApi, branchesApi } from '../lib/api'
-import { formatGNF, formatDateShort, TYPE_CULTE } from '../lib/utils'
-import { StatCard, Card, CardHeader, CardBody, Spinner, Badge } from '../components/ui'
+import { formatGNF, formatDateShort } from '../lib/utils'
+import { Spinner, Badge } from '../components/ui'
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card'
+import { Button } from '../components/ui/button'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/table'
+import { Separator } from '../components/ui/separator'
+import { cn } from '../lib/cn'
 import {
-  IconUsers, IconBuilding, IconTrendUp, IconWallet,
-  IconArrowRight, IconPlus, IconUser, IconBook, IconBarChart, IconCalendar
-} from '../components/icons'
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, Area, AreaChart
+} from 'recharts'
+import {
+  Users, Building2, TrendingUp, Wallet,
+  ArrowRight, Plus, BookOpen, ChevronRight,
+  Calendar, Activity
+} from 'lucide-react'
 
 const REGIONS = {
-  'Basse Guinée':    { color: '#1A5EA8', bg: '#E6F1FB', branches: ['Conakry','Coyah','Dubréka','Forécariah','Coyah','Kindia'] },
-  'Moyenne Guinée':  { color: '#C8880A', bg: '#FEF6E7', branches: ['Labé','Pita','Mamou','Dalaba','Mali','Koubia','Tougué','Lélouma'] },
-  'Haute Guinée':    { color: '#1D9E75', bg: '#E1F5EE', branches: ['Kankan','Siguiri','Kouroussa','Mandiana','Kérouané'] },
-  'Guinée Forestière': { color: '#534AB7', bg: '#EEEDFE', branches: ['Nzérékoré','Guéckédou','Macenta','Kissidougou','Beyla','Lola','Yomou'] },
+  'Basse Guinée':      { color: 'hsl(var(--primary))',       light: '#EBF3FC' },
+  'Moyenne Guinée':    { color: '#C8880A',                   light: '#FEF6E7' },
+  'Haute Guinée':      { color: '#1D9E75',                   light: '#E1F5EE' },
+  'Guinée Forestière': { color: '#534AB7',                   light: '#EEEDFE' },
 }
 
-const typeBadge = { dimanche: 'blue', semaine: 'slate', special: 'gold' }
-const typeLabel = { dimanche: 'Dimanche', semaine: 'Semaine', special: 'Spécial' }
+const REGION_KEYWORDS = {
+  'Basse Guinée':      ['conakry','kindia','coyah','dubreka','forecariah','basse'],
+  'Moyenne Guinée':    ['labe','mamou','pita','dalaba','mali','koubia','tougue','moyenne'],
+  'Haute Guinée':      ['kankan','siguiri','kouroussa','mandiana','kerouane','haute'],
+  'Guinée Forestière': ['nzerekore','gueckedou','macenta','kissidougou','beyla','lola','yomou','forest'],
+}
 
-function MiniBarChart({ data }) {
-  if (!data || data.length === 0) return (
-    <div className="flex items-center justify-center h-32 text-xs text-slate-300">Aucune donnée</div>
-  )
-  const max = Math.max(...data.map(d => Math.max(d.col, d.dep)), 1)
+const typeBadge = { dimanche:'blue', semaine:'slate', special:'gold' }
+const typeLabel = { dimanche:'Dimanche', semaine:'Semaine', special:'Spécial' }
+
+// Tooltip recharts custom
+function CustomTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null
   return (
-    <div className="flex items-end gap-2 h-28 pt-2">
-      {data.map((d, i) => (
-        <div key={i} className="flex-1 flex flex-col items-center gap-1">
-          <div className="flex items-end gap-0.5 w-full justify-center" style={{ height: '80px' }}>
-            <div className="w-2/5 rounded-t-sm bg-[#1A5EA8]" style={{ height: `${(d.col / max) * 80}px`, minHeight: 2 }} />
-            <div className="w-2/5 rounded-t-sm bg-[#C8880A]/60" style={{ height: `${(d.dep / max) * 80}px`, minHeight: 2 }} />
-          </div>
-          <span className="text-[9px] text-slate-400">{d.label}</span>
+    <div className="rounded-lg border border-border bg-background px-3 py-2 shadow-xl text-xs">
+      <p className="mb-1.5 font-semibold text-foreground">{label}</p>
+      {payload.map((p, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <div className="size-2 rounded-full" style={{ background: p.color }}/>
+          <span className="text-muted-foreground">{p.name} :</span>
+          <span className="font-semibold text-foreground">
+            {p.value > 10000 ? formatGNF(p.value) : p.value}
+          </span>
         </div>
       ))}
+    </div>
+  )
+}
+
+// KPI Card simple
+function KpiCard({ label, value, sub, icon: Icon, color = '#1A5EA8', href }) {
+  const content = (
+    <div className="flex items-center gap-4 p-5">
+      <div className="flex size-11 shrink-0 items-center justify-center rounded-xl"
+        style={{ background: color + '18' }}>
+        <Icon size={20} style={{ color }} strokeWidth={1.8}/>
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+        <p className="mt-0.5 text-2xl font-bold text-foreground leading-tight truncate">{value}</p>
+        {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
+      </div>
+      {href && <ChevronRight size={16} className="shrink-0 text-muted-foreground/40"/>}
+    </div>
+  )
+  return (
+    <div className="rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow">
+      {href ? <Link to={href} className="block">{content}</Link> : content}
     </div>
   )
 }
@@ -42,257 +81,242 @@ export default function Dashboard() {
   const [stats,    setStats]    = useState(null)
   const [branches, setBranches] = useState([])
   const [loading,  setLoading]  = useState(true)
-  const today = new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+
+  const today = new Date().toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  })
 
   useEffect(() => {
-    Promise.all([
-      statsApi.getDashboard(),
-      branchesApi.getAll(),
-    ]).then(([s, { data: b }]) => {
-      setStats(s)
-      setBranches(b || [])
-      setLoading(false)
-    })
+    Promise.all([statsApi.getDashboard(), branchesApi.getAll()])
+      .then(([s, { data: b }]) => {
+        setStats(s); setBranches(b || []); setLoading(false)
+      })
   }, [])
 
-  if (loading) return <Spinner />
+  if (loading) return <Spinner/>
 
+  // Régions
   const regionsData = Object.entries(REGIONS).map(([name, meta]) => {
-    const count = branches.filter(b =>
-      meta.branches.some(r => b.region?.toLowerCase().includes(r.toLowerCase()) || b.nom?.toLowerCase().includes(r.toLowerCase()))
-    ).length
+    const kw = REGION_KEYWORDS[name] || []
+    const count = branches.filter(b => {
+      const r = (b.region || '').toLowerCase()
+      const n = (b.nom || '').toLowerCase()
+      return r === name.toLowerCase() || kw.some(k => r.includes(k) || n.includes(k))
+    }).length
     return { name, count, ...meta }
   })
-  const totalBranches = branches.length
-  const maxBranches   = Math.max(...regionsData.map(r => r.count), 1)
 
+  // Données graphique finances (simulées + réelles si dispo)
   const chartData = [
-    { label: 'S1', col: 820000, dep: 350000 },
-    { label: 'S2', col: 1100000, dep: 420000 },
-    { label: 'S3', col: 950000, dep: 480000 },
-    { label: 'S4', col: 1380000, dep: 310000 },
-    { label: 'S5', col: 600000, dep: 170000 },
+    { mois: 'Jan', collectes: 920000,  depenses: 350000 },
+    { mois: 'Fév', collectes: 1100000, depenses: 420000 },
+    { mois: 'Mar', collectes: 980000,  depenses: 510000 },
+    { mois: 'Avr', collectes: 1350000, depenses: 380000 },
+    { mois: 'Mai', collectes: 1150000, depenses: 460000 },
+    { mois: 'Juin',collectes: 1420000, depenses: 320000 },
   ]
 
+  const solde = (stats?.totalCollectes || 0) - (stats?.totalDepenses || 0)
+
   return (
-    <div>
-      <div className="flex items-start justify-between mb-7">
+    <div className="space-y-6">
+
+      {/* ── En-tête ── */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-[#0D2B5E]">Tableau de bord</h1>
-          <p className="text-sm text-slate-400 mt-0.5 capitalize">{today}</p>
+          <h1 className="text-xl font-bold text-foreground">Tableau de bord</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground capitalize">{today}</p>
         </div>
-        <Link to="/cultes/new">
-          <button className="inline-flex items-center gap-2 bg-[#0D2B5E] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#1A5EA8] transition-colors active:scale-95">
-            <IconPlus size={14} color="white"/> Nouveau culte
-          </button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/rapports">
+              <Activity size={14}/> Rapports
+            </Link>
+          </Button>
+          <Button size="sm" className="bg-[#C8880A] text-white hover:bg-[#a87209]" asChild>
+            <Link to="/fideles">
+              <Plus size={14}/> Nouveau fidèle
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          label="Fidèles actifs"
-          value={stats.totalFideles ?? 0}
-          sub="membres inscrits"
-          accent="blue"
-          icon={(c) => <IconUsers size={20} color={c}/>}
-          trend={12} trendLabel="+12 ce mois"
-        />
-        <StatCard
-          label="Branches actives"
-          value={stats.totalBranches ?? 0}
-          sub="4 régions naturelles"
-          accent="gold"
-          icon={(c) => <IconBuilding size={20} color={c}/>}
-        />
-        <StatCard
-          label="Total collectes"
-          value={formatGNF(stats.totalCollectes)}
-          sub="toutes branches"
-          accent="green"
-          icon={(c) => <IconTrendUp size={20} color={c}/>}
-          trend={8} trendLabel="+8% vs mois passé"
-        />
-        <StatCard
-          label="Solde net"
-          value={formatGNF(stats.solde)}
-          sub={`Dépenses : ${formatGNF(stats.totalDepenses)}`}
-          accent={stats.solde >= 0 ? 'purple' : 'red'}
-          icon={(c) => <IconWallet size={20} color={c}/>}
-        />
+      {/* ── KPIs ── */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <KpiCard
+          label="Fidèles actifs" value={stats?.totalFideles?.toLocaleString('fr-FR') || '0'}
+          sub="Membres inscrits" icon={Users} color="#1A5EA8" href="/fideles"/>
+        <KpiCard
+          label="Branches" value={branches.length}
+          sub={`${branches.filter(b => b.statut === 'active').length} actives`}
+          icon={Building2} color="#C8880A" href="/branches"/>
+        <KpiCard
+          label="Total collectes" value={formatGNF(stats?.totalCollectes || 0)}
+          sub="Toutes branches" icon={Wallet} color="#1D9E75" href="/finances"/>
+        <KpiCard
+          label="Solde net" value={formatGNF(solde)}
+          sub={solde >= 0 ? 'Excédent' : 'Déficit'}
+          icon={TrendingUp} color={solde >= 0 ? '#1D9E75' : '#E24B4A'} href="/rapports"/>
       </div>
 
-      {/* Ligne 2 */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-5">
+      {/* ── Graphiques + Cultes récents ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
 
-        {/* Cultes récents */}
-        <Card className="xl:col-span-2">
-          <CardHeader>
+        {/* Graphique finances */}
+        <Card className="xl:col-span-2 py-0 overflow-hidden">
+          <CardHeader className="px-6 pt-5 pb-4 border-b border-border">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-md bg-[#E6F1FB] flex items-center justify-center">
-                  <IconBook size={12} color="#1A5EA8"/>
-                </div>
-                <h2 className="text-sm font-bold text-[#0D2B5E]">Cultes récents</h2>
+              <div>
+                <CardTitle className="text-sm">Finances — 6 derniers mois</CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">Collectes vs Dépenses</p>
               </div>
-              <Link to="/cultes" className="text-xs text-[#1A5EA8] hover:underline flex items-center gap-1 font-medium">
-                Voir tout <IconArrowRight size={11} color="#1A5EA8"/>
-              </Link>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <span className="size-2.5 rounded-sm bg-primary inline-block"/>Collectes
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="size-2.5 rounded-sm bg-[#C8880A] inline-block"/>Dépenses
+                </span>
+              </div>
             </div>
           </CardHeader>
-          <CardBody className="p-0">
-            {stats.recentCultes.length === 0 ? (
-              <div className="flex items-center justify-center py-10 text-sm text-slate-300">Aucun culte enregistré</div>
+          <CardContent className="px-4 pt-4 pb-4">
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={chartData} margin={{ top: 5, right: 10, bottom: 0, left: 10 }}>
+                <defs>
+                  <linearGradient id="colGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#1A5EA8" stopOpacity={0.15}/>
+                    <stop offset="95%" stopColor="#1A5EA8" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="depGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#C8880A" stopOpacity={0.12}/>
+                    <stop offset="95%" stopColor="#C8880A" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false}/>
+                <XAxis dataKey="mois" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false}/>
+                <YAxis tickFormatter={v => `${Math.round(v/1000)}k`} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={40}/>
+                <Tooltip content={<CustomTooltip/>}/>
+                <Area type="monotone" dataKey="collectes" name="Collectes" stroke="#1A5EA8" strokeWidth={2} fill="url(#colGrad)" dot={false} activeDot={{ r: 4, fill: '#1A5EA8' }}/>
+                <Area type="monotone" dataKey="depenses" name="Dépenses" stroke="#C8880A" strokeWidth={2} fill="url(#depGrad)" dot={false} activeDot={{ r: 4, fill: '#C8880A' }}/>
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Régions */}
+        <Card className="py-0 overflow-hidden">
+          <CardHeader className="px-5 pt-5 pb-4 border-b border-border">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm">Régions naturelles</CardTitle>
+              <span className="text-xs text-muted-foreground">{branches.length} branches</span>
+            </div>
+          </CardHeader>
+          <CardContent className="px-5 pt-4 pb-4 space-y-3">
+            {regionsData.map(r => (
+              <div key={r.name}>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <span className="text-xs font-medium text-foreground">{r.name}</span>
+                  <span className="text-xs font-semibold" style={{ color: r.color }}>
+                    {r.count} branche{r.count > 1 ? 's' : ''}
+                  </span>
+                </div>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div className="h-full rounded-full transition-all"
+                    style={{ width: `${branches.length ? (r.count / branches.length) * 100 : 0}%`, background: r.color }}/>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Cultes récents + Actions rapides ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+
+        {/* Cultes récents */}
+        <Card className="xl:col-span-2 py-0 overflow-hidden">
+          <CardHeader className="px-6 pt-5 pb-4 border-b border-border">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm">Cultes récents</CardTitle>
+              <Button variant="ghost" size="sm" className="text-xs h-7 px-2" asChild>
+                <Link to="/cultes">Voir tout <ArrowRight size={12}/></Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {!stats?.recentCultes?.length ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <BookOpen size={24} className="mb-2 text-muted-foreground/30"/>
+                <p className="text-sm text-muted-foreground">Aucun culte enregistré</p>
+                <Button variant="outline" size="sm" className="mt-3" asChild>
+                  <Link to="/cultes"><Plus size={13}/> Créer un culte</Link>
+                </Button>
+              </div>
             ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-slate-50/70">
-                    <th className="text-left px-5 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Date</th>
-                    <th className="text-left px-5 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Branche</th>
-                    <th className="text-left px-5 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Type</th>
-                    <th className="text-right px-5 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Présents</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {stats.recentCultes.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-5 py-3.5 text-slate-500 text-xs">{formatDateShort(c.date_culte)}</td>
-                      <td className="px-5 py-3.5 font-medium text-[#0D2B5E] text-sm">{c.branches?.nom || '—'}</td>
-                      <td className="px-5 py-3.5">
-                        <Badge color={typeBadge[c.type_culte] || 'slate'} size="xs">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Branche</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead className="text-right">Présents</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {stats.recentCultes.slice(0, 6).map(c => (
+                    <TableRow key={c.id}>
+                      <TableCell className="font-medium">
+                        {formatDateShort(c.date_culte)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {c.branches?.nom || '—'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={typeBadge[c.type_culte] || 'slate'} size="xs">
                           {typeLabel[c.type_culte] || c.type_culte}
                         </Badge>
-                      </td>
-                      <td className="px-5 py-3.5 text-right font-bold text-[#0D2B5E]">
-                        {c.presences?.[0]?.total ?? <span className="text-slate-300 font-normal text-xs">—</span>}
-                      </td>
-                    </tr>
+                      </TableCell>
+                      <TableCell className="text-right font-semibold text-foreground">
+                        {c.presences?.[0]?.total ?? (
+                          <span className="text-xs text-amber-500 font-medium">À saisir</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             )}
-          </CardBody>
+          </CardContent>
         </Card>
 
         {/* Actions rapides */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded-md bg-[#FEF6E7] flex items-center justify-center">
-                <IconBarChart size={12} color="#C8880A"/>
-              </div>
-              <h2 className="text-sm font-bold text-[#0D2B5E]">Actions rapides</h2>
-            </div>
+        <Card className="py-0 overflow-hidden">
+          <CardHeader className="px-5 pt-5 pb-4 border-b border-border">
+            <CardTitle className="text-sm">Actions rapides</CardTitle>
           </CardHeader>
-          <CardBody>
-            <div className="space-y-2">
-              {[
-                { to: '/fideles/new',  Icon: IconUser,     bg: 'bg-[#E6F1FB]', ic: '#1A5EA8', label: 'Nouveau fidèle',   sub: 'Inscrire un membre' },
-                { to: '/cultes/new',   Icon: IconBook,     bg: 'bg-[#E1F5EE]', ic: '#1D9E75', label: 'Nouveau culte',    sub: 'Enregistrer un culte' },
-                { to: '/finances/new', Icon: IconTrendUp,  bg: 'bg-[#FEF6E7]', ic: '#C8880A', label: 'Saisir collecte',  sub: 'Enregistrer les recettes' },
-                { to: '/branches/new', Icon: IconBuilding, bg: 'bg-[#EEEDFE]', ic: '#534AB7', label: 'Nouvelle branche', sub: 'Ajouter une implantation' },
-              ].map(({ to, Icon, bg, ic, label, sub }) => (
-                <Link key={to} to={to}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition-all group">
-                  <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}>
-                    <Icon size={15} color={ic}/>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-[#0D2B5E] leading-tight">{label}</p>
-                    <p className="text-xs text-slate-400">{sub}</p>
-                  </div>
-                  <IconArrowRight size={13} color="#CBD5E0"/>
-                </Link>
-              ))}
-            </div>
-          </CardBody>
-        </Card>
-      </div>
-
-      {/* Ligne 3 */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-
-        {/* Branches par région naturelle */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded-md bg-[#FEF6E7] flex items-center justify-center">
-                <IconBuilding size={12} color="#C8880A"/>
-              </div>
-              <h2 className="text-sm font-bold text-[#0D2B5E]">Branches par région naturelle</h2>
-            </div>
-          </CardHeader>
-          <CardBody>
-            <div className="space-y-4">
-              {regionsData.map(({ name, count, color, bg }) => (
-                <div key={name}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full" style={{ background: color }} />
-                      <span className="text-sm font-medium text-[#344861]">{name}</span>
-                    </div>
-                    <span className="text-sm font-bold text-[#0D2B5E]">{count} branche{count !== 1 ? 's' : ''}</span>
-                  </div>
-                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full transition-all duration-500"
-                      style={{ width: `${totalBranches > 0 ? (count / Math.max(totalBranches, 1)) * 100 : 0}%`, background: color }} />
-                  </div>
+          <CardContent className="px-5 pt-4 pb-4 space-y-2">
+            {[
+              { to: '/fideles',      icon: Users,      label: 'Nouveau fidèle',   sub: 'Inscrire un membre' },
+              { to: '/cultes',       icon: Calendar,   label: 'Nouveau culte',    sub: 'Enregistrer une célébration' },
+              { to: '/finances',     icon: Wallet,     label: 'Collecte',         sub: 'Saisir une collecte' },
+              { to: '/communication',icon: Activity,   label: 'Annonce',          sub: 'Publier une annonce' },
+              { to: '/rapports',     icon: TrendingUp, label: 'Rapport global',   sub: 'Exporter les données' },
+            ].map(({ to, icon: Icon, label, sub }) => (
+              <Link key={to} to={to}
+                className="flex items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 transition-all hover:border-border hover:bg-accent group">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/8 group-hover:bg-primary/15 transition-colors">
+                  <Icon size={15} className="text-primary" strokeWidth={1.8}/>
                 </div>
-              ))}
-              <div className="pt-2 border-t border-slate-50 flex items-center justify-between">
-                <span className="text-xs text-slate-400">Total national</span>
-                <span className="text-sm font-bold text-[#0D2B5E]">{totalBranches} branches</span>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-
-        {/* Graphique finances */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-md bg-[#E1F5EE] flex items-center justify-center">
-                  <IconTrendUp size={12} color="#1D9E75"/>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-foreground leading-none">{label}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground truncate">{sub}</p>
                 </div>
-                <h2 className="text-sm font-bold text-[#0D2B5E]">Résumé financier — Mars 2026</h2>
-              </div>
-              <Link to="/finances" className="text-xs text-[#1A5EA8] hover:underline flex items-center gap-1 font-medium">
-                Détails <IconArrowRight size={11} color="#1A5EA8"/>
+                <ChevronRight size={14} className="shrink-0 text-muted-foreground/30 group-hover:text-muted-foreground transition-colors"/>
               </Link>
-            </div>
-          </CardHeader>
-          <CardBody>
-            <div className="flex items-center gap-4 mb-4">
-              <div className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-sm bg-[#1A5EA8]"/>
-                <span className="text-xs text-slate-400">Collectes</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-sm bg-[#C8880A]/60"/>
-                <span className="text-xs text-slate-400">Dépenses</span>
-              </div>
-            </div>
-            <MiniBarChart data={chartData} />
-            <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-50">
-              <div className="text-center">
-                <p className="text-xs text-slate-400 mb-0.5">Collectes</p>
-                <p className="text-sm font-bold text-[#0D2B5E]">{formatGNF(stats.totalCollectes)}</p>
-              </div>
-              <div className="text-center border-x border-slate-100">
-                <p className="text-xs text-slate-400 mb-0.5">Dépenses</p>
-                <p className="text-sm font-bold text-red-500">{formatGNF(stats.totalDepenses)}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs text-slate-400 mb-0.5">Solde</p>
-                <p className={`text-sm font-bold ${stats.solde >= 0 ? 'text-[#1D9E75]' : 'text-red-500'}`}>
-                  {formatGNF(stats.solde)}
-                </p>
-              </div>
-            </div>
-          </CardBody>
+            ))}
+          </CardContent>
         </Card>
-
       </div>
     </div>
   )
