@@ -85,20 +85,41 @@ export default function Pasteurs() {
   }
 
   const openNew  = () => { setEditing(null); setForm(EMPTY); setModal(true) }
-  const openEdit = (p) => { setEditing(p); setForm({...p}); setModal(true) }
+  const openEdit = (p) => {
+    setEditing(p)
+    // Nettoyer les objets imbriqués (branches, etc.) avant de mettre dans le form
+    const clean = Object.fromEntries(
+      Object.entries(p).filter(([k]) => !['branches'].includes(k))
+    )
+    setForm({...EMPTY, ...clean})
+    setModal(true)
+  }
   const close    = () => { setModal(false); setEditing(null) }
   const save = async () => {
     if (!form.nom || !form.prenom) return
     setSaving(true)
-    editing ? await pasteursApi.update(editing.id, form) : await pasteursApi.create(form)
+    const payload = {
+      nom:             form.nom             || '',
+      prenom:          form.prenom          || '',
+      ministere:       form.ministere       || 'Pasteur',
+      role_eglise:     form.role_eglise     || 'Pasteur Titulaire',
+      branch_id:       form.branch_id       || null,
+      telephone:       form.telephone       || '',
+      email:           form.email           || '',
+      date_ordination: form.date_ordination || null,
+      bio:             form.bio             || '',
+      actif:           form.actif           ?? true,
+    }
+    const { error } = editing
+      ? await pasteursApi.update(editing.id, payload)
+      : await pasteursApi.create(payload)
+    if (error) console.error('Pasteur save error:', error)
     setSaving(false); close(); load()
   }
-  const del = async (id) => {
-    setDelId(id)
-  }
+  const del = (id) => setDelId(id)
   const confirmDel = async () => {
     setDeleting(true)
-    await pasteurssApi.delete(delId)
+    await pasteursApi.delete(delId)
     setDeleting(false); setDelId(null); load()
   }
   const f = k => e => setForm(p => ({ ...p, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
@@ -306,3 +327,4 @@ export default function Pasteurs() {
     </div>
   )
 }
+

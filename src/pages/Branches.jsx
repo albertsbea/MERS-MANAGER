@@ -35,20 +35,30 @@ export default function Branches() {
   useEffect(() => { load() }, [])
 
   const openNew  = ()  => { setEditing(null); setForm(EMPTY); setModal(true) }
-  const openEdit = (b) => { setEditing(b); setForm({ ...b }); setModal(true) }
+  const openEdit = (b) => {
+    setEditing(b)
+    const { branches: _, ...clean } = b
+    setForm(clean)
+    setModal(true)
+  }
   const close    = ()  => { setModal(false); setEditing(null) }
 
   const save = async () => {
     if (!form.nom || !form.region) return
     setSaving(true)
-    if (editing) {
-      await branchesApi.update(editing.id, form)
-    } else {
-      await branchesApi.create(form)
+    const payload = {
+      nom:          form.nom        || '',
+      region:       form.region     || '',
+      adresse:      form.adresse    || '',
+      telephone:    form.telephone  || '',
+      pasteur_nom:  form.pasteur_nom|| '',
+      statut:       form.statut     || 'active',
     }
-    setSaving(false)
-    close()
-    load()
+    const { error } = editing
+      ? await branchesApi.update(editing.id, payload)
+      : await branchesApi.create(payload)
+    if (error) console.error('Branches save error:', error)
+    setSaving(false); close(); load()
   }
 
   const del        = (id) => setDelId(id)

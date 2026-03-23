@@ -95,8 +95,8 @@ export default function Profil() {
           <Card>
             <CardBody className="p-2">
               {[
-                { key:'profil',         Icon:IUser,   label:'Informations personnelles' },
-                { key:'securite',       Icon:IShield, label:'Sécurité & Mot de passe' },
+                { key:'profil',         Icon:IUser,   label:'Infos personnelles' },
+                { key:'securite',       Icon:IShield, label:'Sécurité ' },
                 { key:'notifications',  Icon:IBell,   label:'Notifications' },
               ].map(({ key, Icon, label }) => (
                 <button key={key} onClick={() => setTab(key)}

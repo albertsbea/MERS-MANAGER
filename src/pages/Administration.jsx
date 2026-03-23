@@ -54,13 +54,29 @@ export default function Administration() {
   const roleCount = Object.fromEntries(Object.keys(ROLES).map(r => [r, users.filter(u => u.role === r).length]))
 
   const openNew  = () => { setEditing(null); setForm(EMPTY); setModal(true) }
-  const openEdit = (u) => { setEditing(u); setForm({ ...u }); setModal(true) }
+  const openEdit = (u) => {
+    setEditing(u)
+    const { branches: _, ...clean } = u
+    setForm(clean)
+    setModal(true)
+  }
   const close    = () => { setModal(false); setEditing(null) }
 
   const save = async () => {
     if (!form.nom || !form.email) return
     setSaving(true)
-    editing ? await utilisateursApi.update(editing.id, form) : await utilisateursApi.create(form)
+    const payload = {
+      nom:       form.nom       || '',
+      prenom:    form.prenom    || '',
+      email:     form.email     || '',
+      role:      form.role      || 'secretaire',
+      branch_id: form.branch_id || null,
+      actif:     form.actif     ?? true,
+    }
+    const { error } = editing
+      ? await utilisateursApi.update(editing.id, payload)
+      : await utilisateursApi.create(payload)
+    if (error) console.error('Administration save error:', error)
     setSaving(false); close(); load()
   }
   const del = async (id) => {

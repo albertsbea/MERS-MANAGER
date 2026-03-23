@@ -1,5 +1,6 @@
 import ConfirmModal from '../components/ConfirmModal'
 import Pagination from '../components/Pagination'
+import { supabase } from '../lib/supabase'
 import { useEffect, useState } from 'react'
 import { cultesApi, branchesApi, presencesApi } from '../lib/api'
 import { formatDate, formatGNF } from '../lib/utils'
@@ -89,7 +90,24 @@ export default function Cultes() {
   }
   const savePres = async () => {
     setSaving(true)
-    await presencesApi.upsert({ culte_id: activeC.id, ...presForm })
+    // "total" est une colonne GENEREE par Supabase (GENERATED ALWAYS) — ne jamais l'inclure
+    const fields = {
+      papas:     parseInt(presForm.papas)     || 0,
+      mamans:    parseInt(presForm.mamans)    || 0,
+      jeunes:    parseInt(presForm.jeunes)    || 0,
+      enfants:   parseInt(presForm.enfants)   || 0,
+      visiteurs: parseInt(presForm.visiteurs) || 0,
+    }
+    const { data: existing } = await presencesApi.getByCulte(activeC.id)
+    let error
+    if (existing?.id) {
+      const res = await supabase.from('presences').update(fields).eq('id', existing.id)
+      error = res.error
+    } else {
+      const res = await supabase.from('presences').insert({ culte_id: activeC.id, ...fields })
+      error = res.error
+    }
+    if (error) console.error('Presences save error:', error)
     setSaving(false); setPresModal(false); setActiveC(null); load()
   }
 
@@ -322,3 +340,4 @@ export default function Cultes() {
     </div>
   )
 }
+

@@ -80,13 +80,36 @@ export default function Fideles() {
   }
 
   const openNew  = () => { setEditing(null); setForm(EMPTY); setModal(true) }
-  const openEdit = (f) => { setEditing(f); setForm({ ...f }); setModal(true) }
+  const openEdit = (f) => {
+    setEditing(f)
+    const { branches: _, ...clean } = f
+    setForm({...clean, branch_id: clean.branch_id || ''})
+    setModal(true)
+  }
   const close    = () => { setModal(false); setEditing(null) }
 
   const save = async () => {
     if (!form.nom || !form.prenom) return
     setSaving(true)
-    editing ? await fidelesApi.update(editing.id, form) : await fidelesApi.create(form)
+    const payload = {
+      branch_id:      form.branch_id      || null,
+      nom:            form.nom            || '',
+      prenom:         form.prenom         || '',
+      date_naissance: form.date_naissance || null,
+      genre:          form.genre          || 'M',
+      telephone:      form.telephone      || '',
+      adresse:        form.adresse        || '',
+      profession:     form.profession     || '',
+      situation:      form.situation      || 'celibataire',
+      departement:    form.departement    || 'papas',
+      baptise:        form.baptise        ?? false,
+      discipolat:     form.discipolat     || 'non_commence',
+      statut:         form.statut         || 'actif',
+    }
+    const { error } = editing
+      ? await fidelesApi.update(editing.id, payload)
+      : await fidelesApi.create(payload)
+    if (error) console.error('Fideles save error:', error)
     setSaving(false); close(); load()
   }
   const del = async (id) => {
@@ -331,3 +354,4 @@ export default function Fideles() {
     </div>
   )
 }
+

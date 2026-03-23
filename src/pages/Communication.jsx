@@ -63,13 +63,29 @@ export default function Communication() {
   }
 
   const openNew   = () => { setEditing(null); setForm(EMPTY); setModal(true) }
-  const openEdit  = (a) => { setEditing(a); setForm({ ...a }); setModal(true) }
+  const openEdit  = (a) => {
+    setEditing(a)
+    const { branches: _, ...clean } = a
+    setForm(clean)
+    setModal(true)
+  }
   const close     = () => { setModal(false); setEditing(null) }
 
   const save = async () => {
     if (!form.titre || !form.contenu) return
     setSaving(true)
-    editing ? await annoncesApi.update(editing.id, form) : await annoncesApi.create(form)
+    const payload = {
+      titre:   form.titre   || '',
+      contenu: form.contenu || '',
+      type:    form.type    || 'info',
+      cible:   form.cible   || 'toutes',
+      auteur:  form.auteur  || 'Administration',
+      publiee: form.publiee ?? true,
+    }
+    const { error } = editing
+      ? await annoncesApi.update(editing.id, payload)
+      : await annoncesApi.create(payload)
+    if (error) console.error('Communication save error:', error)
     setSaving(false); close(); load()
   }
   const del = async (id) => {
@@ -231,3 +247,4 @@ export default function Communication() {
     </div>
   )
 }
+
